@@ -1,1 +1,3 @@
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/patelgyts/Patelxvps&envs=Ngrok,Password,re&required=Ngrok,Password,re)
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc
+echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main"
+apt-get install -y ngrok
