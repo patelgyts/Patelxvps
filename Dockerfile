@@ -10,15 +10,15 @@ RUN apt-get update -y && \
         openssh-server \
         wget \
         curl \
-        gnupg \
         unzip \
         ca-certificates && \
     update-ca-certificates
 
-# Install ngrok (direct binary method - most stable)
+# Install ngrok (direct binary method)
 RUN wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip && \
     unzip ngrok-v3-stable-linux-amd64.zip && \
-    mv ngrok /usr/local/bin/ && \
+    mv ngrok /usr/local/bin/ngrok && \
+    chmod +x /usr/local/bin/ngrok && \
     rm ngrok-v3-stable-linux-amd64.zip
 
 # Locale setup
@@ -45,10 +45,10 @@ RUN mkdir -p /run/sshd && \
 RUN printf '#!/bin/bash\n\
 set -e\n\
 ngrok config add-authtoken "${Ngrok}"\n\
-ngrok tcp 22 --region "${re}" > /dev/null 2>&1 &\n\
+ngrok tcp 22 --region "${re}" &\n\
 exec /usr/sbin/sshd -D\n' > /entrypoint.sh && \
 chmod +x /entrypoint.sh
 
-EXPOSE 22 80 443 3306 5130 5131 5132 5133 5134 5135 8080 8888
+EXPOSE 22 80 443 8080 8888
 
 CMD ["/entrypoint.sh"]
