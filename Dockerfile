@@ -1,38 +1,36 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LANG=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
 
-# Install required packages
+# Basic packages + SSH + curl + wget + unzip
 RUN apt-get update -y && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-        locales \
-        openssh-server \
-        wget \
-        curl \
-        unzip && \
-    locale-gen en_US.UTF-8 && \
+    apt-get install -y \
+    openssh-server \
+    curl \
+    wget \
+    unzip \
+    sudo \
+    nano && \
     mkdir /var/run/sshd
 
-# Install ngrok (official binary method - Railway compatible)
-RUN wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip && \
-    unzip ngrok-v3-stable-linux-amd64.zip && \
-    mv ngrok /usr/local/bin/ && \
-    rm ngrok-v3-stable-linux-amd64.zip
-
-# Root password set via Railway variable
-ARG Password
-RUN echo "root:${Password}" | chpasswd
+# Root password set (change later if needed)
+RUN echo "root:railway" | chpasswd
 
 # Allow root login
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
+# SSH port
 EXPOSE 22
 
-# Start SSH + ngrok tunnel
+# Install ngrok
+RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+| tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && \
+echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+| tee /etc/apt/sources.list.d/ngrok.list && \
+apt update && apt install ngrok -y
+
+# Start SSH + ngrok
 CMD service ssh start && \
-    ngrok config add-authtoken $Ngrok && \
-    ngrok tcp --region=$re 22
+ngrok config add-authtoken YOUR_NGROK_TOKEN && \
+ngrok tcp 22
