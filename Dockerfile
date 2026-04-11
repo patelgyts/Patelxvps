@@ -2,28 +2,32 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install base packages + certificates FIRST
 RUN apt-get update -y && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-        locales \
-        openssh-server \
-        wget \
-        curl \
-        gnupg \
-        unzip \
-        ca-certificates && \
-    update-ca-certificates && \
-    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+    apt-get install -y \
+    ca-certificates \
+    locales \
+    openssh-server \
+    wget \
+    curl \
+    gnupg \
+    unzip && \
+    update-ca-certificates
 
+# Setup locale
+RUN localedef -i en_US -c -f UTF-8 \
+    -A /usr/share/locale/locale.alias en_US.UTF-8
+
+# SSH setup
 RUN mkdir /var/run/sshd
-
 RUN echo "root:railway" | chpasswd
-
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' \
+    /etc/ssh/sshd_config
 
 EXPOSE 22
 
-# Install ngrok correctly
+# Install ngrok correctly (IMPORTANT: buster repo)
 RUN curl -fsSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
     | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && \
     echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
